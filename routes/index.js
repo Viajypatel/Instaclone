@@ -126,13 +126,19 @@ router.get("/save/:postid", isLoggedIn, async function (req, res) {
 });
 
 router.get("/search/:user", isLoggedIn, async function (req, res) {
-  const searchTerm = `^${req.params.user}`;
-  const regex = new RegExp(searchTerm);
+  try {
+    const searchTerm = `^${req.params.user}`;
+    const regex = new RegExp(searchTerm, 'i');
 
-  let users = await userModel.find({ username: { $regex: regex } });
+    let users = await userModel.find({ username: { $regex: regex } });
 
-  res.json(users);
+    res.json(users);
+  } catch (error) {
+    console.error("Error searching users:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
+
 
 router.get("/edit", isLoggedIn, async function (req, res) {
   const user = await userModel.findOne({ username: req.session.passport.user });
@@ -242,5 +248,53 @@ function isLoggedIn(req, res, next) {
     res.redirect("/login");
   }
 }
+
+//delete
+router.post("/delete-post/:postid", isLoggedIn, async function (req, res) {
+  try {
+    // Find the post by ID
+    const post = await postModel.findOne({ _id: req.params.postid });
+    
+    // Ensure that the logged-in user owns the post
+    if (post.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: "You are not authorized to delete this post" });
+    }
+
+    // Delete the post
+    await postModel.deleteOne({ _id: req.params.postid });
+
+    // Remove the post ID from the user's posts array
+    const user = await userModel.findOneAndUpdate(
+      { _id: req.user._id },
+      { $pull: { posts: req.params.postid } },
+      { new: true }
+    );
+
+    // Redirect back to the profile page
+    res.redirect("/profile");
+  } catch (error) {
+    console.error("Error deleting post:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+//story
+router.get("/story/:userid", isLoggedIn, async function (req, res) {
+  try {
+    // Find the story uploaded by the specified user
+    const story = await storyModel.findOne({ userId: req.params.userid }).populate("user");
+
+    // If the story is not found, render a message indicating no story found for this user
+    if (!story) {
+      return res.render("story", { noStoryFound: true, footer: true });
+    }
+
+    // Render the story page with the found story
+    res.render("story", { story: story, footer: true });
+  } catch (error) {
+    console.error("Error fetching story:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 
 module.exports = router;

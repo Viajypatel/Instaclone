@@ -1,0 +1,22 @@
+<% include ./partials/header.ejs %>
+
+<div class="container mx-auto px-4 py-8">
+  <h2 class="text-2xl font-semibold mb-4">User Stories</h2>
+
+  <% if (stories.length === 0) { %>
+    <p>No stories found for this user.</p>
+  <% } else { %>
+    <div class="grid grid-cols-2 gap-4">
+      <% stories.forEach(function(story) { %>
+        <div class="border border-gray-200 rounded p-4">
+          <h3 class="text-lg font-semibold mb-2"><%= story.title %></h3>
+          <img src="/images/uploads/<%= story.image %>" alt="Story Image" class="w-full mb-4">
+          <p class="text-gray-600"><%= story.content %></p>
+          <p class="text-sm text-gray-500 mt-2">Posted by <%= story.user.username %> on <%= formatRelativeTime(story.createdAt) %></p>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
+<% include ./partials/footer.ejs %>
