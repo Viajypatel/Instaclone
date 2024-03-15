@@ -4,21 +4,30 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var expressSession = require('express-session');
-
+const MongoStore = require('connect-mongo');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 const passport = require('passport');
-
+const mongoose=require("mongoose");
 var app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+const dburl = "mongodb+srv://vijaypatel114200:T7hRFvntTqwHE4y4@cluster0.zz20hw5.mongodb.net/Pindb1144";
+mongoose.connect(dburl, { useNewUrlParser: true, useUnifiedTopology: true });
+
+
 app.use(expressSession({
-  resave: false,
+  resave: false, 
   saveUninitialized: false,
-  secret: "heyheyehhdd"
+  secret: "hey hi hellojjjjj",
+  store: new MongoStore({ 
+    mongoUrl: dburl, // Provide the MongoDB URL directly
+    dbName: 'Pindb1144', // Specify the database name
+    mongooseConnection: mongoose.connection, // Provide mongoose connection as client
+  })
 }));
 app.use(passport.initialize());
 app.use(passport.session());
